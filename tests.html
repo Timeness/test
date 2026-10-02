@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mantra L1 MFS110 Fingerprint Data Capture</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Rajdhani:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #0b0f19;
+  --surface: #111827;
+  --surface-2: #1f2937;
+  --ink: #f3f4f6;
+  --muted: #9ca3af;
+  --accent: #10b981;
+  --accent-weak: rgba(16,185,129,0.12);
+  --accent-glow: rgba(16,185,129,0.35);
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --info: #3b82f6;
+  --line: rgba(255,255,255,0.08);
+  --radius: 16px;
+  --shadow: 0 8px 32px rgba(0,0,0,0.4);
+  --font-display: 'Rajdhani', sans-serif;
+  --font-body: 'Inter', sans-serif;
+}
+* { box-sizing: border-box; }
+html, body {
+  margin: 0; padding: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px;
+}
+header {
+  text-align: center;
+  padding: 40px 0 24px;
+  border-bottom: 1px solid var(--line);
+  margin-bottom: 24px;
+}
+header h1 {
+  font-family: var(--font-display);
+  font-size: clamp(1.8rem, 4vw, 2.8rem);
+  margin: 0 0 8px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: linear-gradient(90deg, #34d399, #10b981);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+header p {
+  color: var(--muted);
+  margin: 0;
+  font-size: 0.95rem;
+}
+.grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 20px;
+}
+@media (min-width: 900px) {
+  .grid { grid-template-columns: 360px 1fr; }
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+  box-shadow: var(--shadow);
+}
+.card h2 {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  margin: 0 0 16px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #e5e7eb;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+.badge-ready { background: rgba(16,185,129,0.15); color: #34d399; border: 1px solid rgba(16,185,129,0.3); }
+.badge-error { background: rgba(239,68,68,0.15); color: #fca5a5; border: 1px solid rgba(239,68,68,0.3); }
+.badge-warn { background: rgba(245,158,11,0.15); color: #fcd34d; border: 1px solid rgba(245,158,11,0.3); }
+.badge-info { background: rgba(59,130,246,0.15); color: #93c5fd; border: 1px solid rgba(59,130,246,0.3); }
+
+.btn {
+  width: 100%;
+  padding: 14px 18px;
+  border: none;
+  border-radius: 12px;
+  font-family: var(--font-body);
+  font-weight: 600;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.btn-primary {
+  background: linear-gradient(135deg, #059669, #10b981);
+  color: #fff;
+  box-shadow: 0 6px 20px rgba(16,185,129,0.25);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 10px 28px rgba(16,185,129,0.35); }
+.btn-secondary {
+  background: var(--surface-2);
+  color: var(--ink);
+  border: 1px solid var(--line);
+}
+.btn-secondary:hover { background: #273449; }
+.btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+.scan-area {
+  width: 100%;
+  height: 260px;
+  border: 2px dashed rgba(16,185,129,0.3);
+  border-radius: var(--radius);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  background: var(--accent-weak);
+  margin-bottom: 16px;
+  position: relative;
+  overflow: hidden;
+}
+.scan-area.active {
+  border-color: var(--accent);
+  background: rgba(16,185,129,0.08);
+  box-shadow: 0 0 30px var(--accent-glow);
+}
+.scan-area img {
+  max-height: 220px;
+  max-width: 90%;
+  border-radius: 10px;
+  object-fit: contain;
+}
+.scan-icon {
+  font-size: 3rem;
+  opacity: 0.8;
+}
+.scan-text {
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 0 20px;
+}
+
+.status-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.status-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.9rem;
+}
+.status-list li:last-child { border-bottom: none; }
+.status-label { color: var(--muted); }
+.status-value { font-weight: 600; color: #e5e7eb; }
+
+.logs {
+  background: #0f172a;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 16px;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  font-size: 0.82rem;
+  line-height: 1.6;
+  color: #a5b4fc;
+  max-height: 500px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+.logs .log-time { color: #6b7280; margin-right: 8px; }
+.logs .log-info { color: #93c5fd; }
+.logs .log-success { color: #34d399; }
+.logs .log-error { color: #fca5a5; }
+.logs .log-warn { color: #fcd34d; }
+
+.data-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+@media (min-width: 700px) {
+  .data-grid { grid-template-columns: 1fr 1fr; }
+}
+.data-block {
+  background: #0f172a;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 14px;
+}
+.data-block h4 {
+  margin: 0 0 10px;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  color: var(--muted);
+}
+.data-block pre {
+  margin: 0;
+  white-space: pre-wrap;
+  word-break: break-all;
+  font-size: 0.78rem;
+  color: #c7d2fe;
+  max-height: 220px;
+  overflow-y: auto;
+}
+
+.port-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 10px;
+}
+.port-badge {
+  padding: 4px 10px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--muted);
+}
+.port-badge.active {
+  background: rgba(16,185,129,0.15);
+  color: #34d399;
+  border-color: rgba(16,185,129,0.3);
+}
+
+input[type="text"], input[type="number"], select {
+  width: 100%;
+  padding: 10px 12px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--surface-2);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  margin-bottom: 10px;
+}
+input:focus, select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--accent-weak);
+}
+label {
+  display: block;
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 4px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.spinner {
+  width: 20px; height: 20px;
+  border: 2px solid rgba(255,255,255,0.2);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.pulse {
+  animation: pulse 2s infinite;
+}
+@keyframes pulse {
+  0% { box-shadow: 0 0 0 0 rgba(16,185,129,0.4); }
+  70% { box-shadow: 0 0 0 12px rgba(16,185,129,0); }
+  100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+}
+
+.full-width { grid-column: 1 / -1; }
+
+footer {
+  text-align: center;
+  padding: 30px 0;
+  color: #6b7280;
+  font-size: 0.8rem;
+  border-top: 1px solid var(--line);
+  margin-top: 20px;
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <h1>Mantra L1 MFS110 Fingerprint Data Capture</h1>
+    <p>RD Service se saari device aur fingerprint details nikaalein. Localhost API integration ready.</p>
+  </header>
+
+  <div class="grid">
+    <div class="left-col">
+      <div class="card">
+        <h2><span style="color:var(--accent)">&#9670;</span> Device Control</h2>
+        <div class="scan-area" id="scanArea">
+          <div class="scan-icon">&#128400;</div>
+          <div class="scan-text" id="scanText">Device check karein, phir Capture par click karein</div>
+          <img id="fingerImg" style="display:none;" alt="Fingerprint Scan">
+        </div>
+        <button class="btn btn-secondary" id="btnDiscover" onclick="discoverDevice()">
+          <span>&#128268;</span> Discover RD Service
+        </button>
+        <button class="btn btn-secondary" id="btnInfo" onclick="getDeviceInfo()" disabled>
+          <span>&#8505;</span> Get Device Info
+        </button>
+        <button class="btn btn-primary" id="btnCapture" onclick="captureFinger()" disabled>
+          <span id="capSpinner" style="display:none;" class="spinner"></span>
+          <span id="capText">&#128400; Capture Fingerprint</span>
+        </button>
+        <div style="margin-top:12px;">
+          <label>Capture Timeout (ms)</label>
+          <input type="number" id="capTimeout" value="30000" min="10000" max="120000">
+          <label>Finger Count</label>
+          <select id="fCount"><option value="1" selected>1</option><option value="2">2</option></select>
+          <label>Data Type</label>
+          <select id="dataType"><option value="X" selected>XML (X)</option><option value="P">ProtoBuf (P)</option></select>
+          <label>Environment</label>
+          <select id="env"><option value="P" selected>Production (P)</option><option value="PP">Pre-Prod (PP)</option><option value="S">Staging (S)</option></select>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h2><span style="color:var(--info)">&#9670;</span> Connection Status</h2>
+        <ul class="status-list">
+          <li><span class="status-label">RD Service</span><span class="status-value" id="stRd">Not checked</span></li>
+          <li><span class="status-label">Device Connected</span><span class="status-value" id="stDev">Unknown</span></li>
+          <li><span class="status-label">Active Port</span><span class="status-value" id="stPort">-</span></li>
+          <li><span class="status-label">Capture Path</span><span class="status-value" id="stPath">-</span></li>
+          <li><span class="status-label">Last Action</span><span class="status-value" id="stLast">-</span></li>
+        </ul>
+        <div class="port-badges" id="portBadges">
+          <span class="port-badge">11100</span>
+          <span class="port-badge">11101</span>
+          <span class="port-badge">11102</span>
+          <span class="port-badge">11103</span>
+          <span class="port-badge">11104</span>
+          <span class="port-badge">11105</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="right-col">
+      <div class="card">
+        <h2><span style="color:var(--warning)">&#9670;</span> Live Logs</h2>
+        <div class="logs" id="logPanel">[System] Page loaded. RD Service discover karein.</div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h2><span style="color:var(--accent)">&#9670;</span> Captured Fingerprint Data</h2>
+        <div class="data-grid" id="dataPanel">
+          <div class="data-block full-width">
+            <h4>Abhi koi data nahi. Capture par click karein.</h4>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top:20px;">
+        <h2><span style="color:var(--info)">&#9670;</span> Device Information</h2>
+        <div class="data-grid" id="devicePanel">
+          <div class="data-block full-width">
+            <h4>Device info yahan dikhega. "Get Device Info" click karein.</h4>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    Mantra L1 MFS110 RD Service Web Client | Works with localhost RD Service API
+  </footer>
+</div>
+
+<script>
+let activePort = null;
+let capturePath = '/rd/capture';
+let infoPath = '/rd/info';
+let rdStatus = 'NOTREADY';
+
+function now() {
+  const d = new Date();
+  return d.toLocaleTimeString('en-IN', { hour12: false }) + '.' + String(d.getMilliseconds()).padStart(3, '0');
+}
+function log(msg, type='info') {
+  const panel = document.getElementById('logPanel');
+  const cls = type==='success'?'log-success':type==='error'?'log-error':type==='warn'?'log-warn':'log-info';
+  panel.innerHTML += `\n<span class="log-time">[${now()}]</span><span class="${cls}">${msg}</span>`;
+  panel.scrollTop = panel.scrollHeight;
+}
+
+function setStatus(id, text, type='info') {
+  const el = document.getElementById(id);
+  el.textContent = text;
+  el.className = 'status-value';
+  if (type==='success') el.style.color = '#34d399';
+  else if (type==='error') el.style.color = '#fca5a5';
+  else if (type==='warn') el.style.color = '#fcd34d';
+  else el.style.color = '#e5e7eb';
+}
+
+async function httpRequest(url, method, body=null, contentType=null) {
+  try {
+    const opts = { method, mode: 'cors', cache: 'no-cache' };
+    if (body) {
+      opts.body = body;
+      if (contentType) opts.headers = { 'Content-Type': contentType };
+    }
+    const res = await fetch(url, opts);
+    const text = await res.text();
+    return { ok: res.ok, status: res.status, text };
+  } catch (e) {
+    return { ok: false, status: 0, text: '', error: e.message };
+  }
+}
+
+function parseXML(txt) {
+  const parser = new DOMParser();
+  return parser.parseFromString(txt, 'text/xml');
+}
+
+function getAttr(doc, tag, attr) {
+  const el = doc.querySelector(tag);
+  return el ? el.getAttribute(attr) : null;
+}
+
+async function discoverDevice() {
+  log('Discovering RD Service on ports 11100-11105...', 'info');
+  setStatus('stLast', 'Discovering...', 'warn');
+  activePort = null; rdStatus = 'NOTREADY';
+  document.getElementById('btnInfo').disabled = true;
+  document.getElementById('btnCapture').disabled = true;
+
+  const badges = document.querySelectorAll('.port-badge');
+  badges.forEach(b => b.classList.remove('active'));
+
+  for (let p = 11100; p <= 11105; p++) {
+    const url = `http://127.0.0.1:${p}`;
+    log(`Trying port ${p}...`);
+    const r = await httpRequest(url, 'RDSERVICE');
+    if (r.ok && r.text.includes('RDService')) {
+      activePort = p;
+      const doc = parseXML(r.text);
+      rdStatus = getAttr(doc, 'RDService', 'status') || 'UNKNOWN';
+      const info = getAttr(doc, 'Interface[id="DEVICEINFO"]', 'path');
+      const cap = getAttr(doc, 'Interface[id="CAPTURE"]', 'path');
+      if (!info) {
+        const elInfo = doc.querySelector('Interface#DEVICEINFO');
+        if (elInfo) infoPath = elInfo.getAttribute('path') || '/rd/info';
+      } else { infoPath = info; }
+      if (!cap) {
+        const elCap = doc.querySelector('Interface#CAPTURE');
+        if (elCap) capturePath = elCap.getAttribute('path') || '/rd/capture';
+      } else { capturePath = cap; }
+
+      badges[p-11100].classList.add('active');
+      log(`RD Service found on port ${p}. Status: ${rdStatus}`, 'success');
+      setStatus('stRd', rdStatus, rdStatus==='READY'?'success':'warn');
+      setStatus('stPort', p, 'success');
+      setStatus('stPath', capturePath, 'info');
+      setStatus('stLast', 'Discovered', 'success');
+      document.getElementById('btnInfo').disabled = false;
+      if (rdStatus === 'READY') document.getElementById('btnCapture').disabled = false;
+      return;
+    }
+  }
+  log('RD Service not found on any port. Kripya check karein:', 'error');
+  log('1. Mantra RD Service installed hai?', 'error');
+  log('2. Device USB se connected hai?', 'error');
+  log('3. Browser flags mein insecure private network requests disabled hai?', 'error');
+  setStatus('stRd', 'Not Found', 'error');
+  setStatus('stLast', 'Discovery Failed', 'error');
+}
+
+async function getDeviceInfo() {
+  if (!activePort) { log('Pehle Discover karein.', 'warn'); return; }
+  const url = `http://127.0.0.1:${activePort}${infoPath}`;
+  log(`Fetching Device Info from ${url}...`);
+  setStatus('stLast', 'Getting Device Info...', 'warn');
+  const r = await httpRequest(url, 'DEVICEINFO');
+  if (!r.ok) { log('Device Info fetch failed: ' + (r.error || r.status), 'error'); setStatus('stLast', 'Failed', 'error'); return; }
+
+  const doc = parseXML(r.text);
+  const dpId = getAttr(doc, 'DeviceInfo', 'dpId');
+  const rdsId = getAttr(doc, 'DeviceInfo', 'rdsId');
+  const rdsVer = getAttr(doc, 'DeviceInfo', 'rdsVer');
+  const mi = getAttr(doc, 'DeviceInfo', 'mi');
+  const mc = getAttr(doc, 'DeviceInfo', 'mc');
+  const dc = getAttr(doc, 'DeviceInfo', 'dc');
+
+  const addInfo = doc.querySelector('additional_info');
+  let addParams = '';
+  if (addInfo) {
+    addInfo.querySelectorAll('Param').forEach(p => {
+      addParams += `${p.getAttribute('name')}: ${p.getAttribute('value')}\n`;
+    });
+  }
+
+  setStatus('stDev', mi || 'Connected', 'success');
+  setStatus('stLast', 'Device Info Received', 'success');
+  log(`Device: ${mi}, DPID: ${dpId}, RDS: ${rdsId}`, 'success');
+
+  document.getElementById('devicePanel').innerHTML = `
+    <div class="data-block"><h4>dpId (Device Provider ID)</h4><pre>${dpId || 'N/A'}</pre></div>
+    <div class="data-block"><h4>rdsId (RD Service ID)</h4><pre>${rdsId || 'N/A'}</pre></div>
+    <div class="data-block"><h4>rdsVer (RD Version)</h4><pre>${rdsVer || 'N/A'}</pre></div>
+    <div class="data-block"><h4>mi (Model ID)</h4><pre>${mi || 'N/A'}</pre></div>
+    <div class="data-block full-width"><h4>mc (Management Certificate / Public Key)</h4><pre>${mc || 'N/A'}</pre></div>
+    <div class="data-block"><h4>dc (Device Code)</h4><pre>${dc || 'N/A'}</pre></div>
+    <div class="data-block full-width"><h4>Additional Info</h4><pre>${addParams || 'N/A'}</pre></div>
+    <div class="data-block full-width"><h4>Raw XML Response</h4><pre>${escapeHtml(r.text)}</pre></div>
+  `;
+}
+
+function escapeHtml(t) {
+  return t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+}
+
+async function captureFinger() {
+  if (!activePort) { log('Pehle Discover karein.', 'warn'); return; }
+  const timeout = document.getElementById('capTimeout').value || '30000';
+  const fCount = document.getElementById('fCount').value;
+  const dataType = document.getElementById('dataType').value;
+  const env = document.getElementById('env').value;
+  const url = `http://127.0.0.1:${activePort}${capturePath}`;
+
+  const pidOptions = `<?xml version="1.0"?>\n<PidOptions ver="1.0">\n  <Opts fCount="${fCount}" fType="0" iCount="0" pCount="0" format="0" pidVer="2.0" timeout="${timeout}" posh="UNKNOWN" env="${env}"/>\n  <CustOpts>\n    <Param name="mantrakey" value=""/>\n  </CustOpts>\n</PidOptions>`;
+
+  log('Capture request bheja ja raha hai...', 'info');
+  setStatus('stLast', 'Capturing...', 'warn');
+  document.getElementById('capSpinner').style.display = 'inline-block';
+  document.getElementById('capText').textContent = 'Place finger on device...';
+  document.getElementById('btnCapture').disabled = true;
+  document.getElementById('scanArea').classList.add('active');
+  document.getElementById('scanText').textContent = 'Please place your finger on the scanner...';
+
+  const r = await httpRequest(url, 'CAPTURE', pidOptions, 'application/xml');
+
+  document.getElementById('capSpinner').style.display = 'none';
+  document.getElementById('capText').textContent = 'Capture Fingerprint';
+  document.getElementById('btnCapture').disabled = false;
+  document.getElementById('scanArea').classList.remove('active');
+
+  if (!r.ok) {
+    log('Capture failed: ' + (r.error || `HTTP ${r.status}`), 'error');
+    setStatus('stLast', 'Capture Failed', 'error');
+    document.getElementById('scanText').textContent = 'Capture failed. Check logs.';
+    return;
+  }
+
+  log('Capture response mil gaya. Parsing...', 'success');
+  setStatus('stLast', 'Capture Success', 'success');
+  document.getElementById('scanText').textContent = 'Capture complete! Data below.';
+
+  parseCaptureResponse(r.text);
+}
+
+function parseCaptureResponse(xmlText) {
+  const doc = parseXML(xmlText);
+  const resp = doc.querySelector('Resp');
+  const errCode = resp ? resp.getAttribute('errCode') : null;
+  const errInfo = resp ? resp.getAttribute('errInfo') : null;
+  const fCount = resp ? resp.getAttribute('fCount') : null;
+  const iCount = resp ? resp.getAttribute('iCount') : null;
+  const pCount = resp ? resp.getAttribute('pCount') : null;
+  const nmPoints = resp ? resp.getAttribute('nmPoints') : null;
+  const qScore = resp ? resp.getAttribute('qScore') : null;
+
+  const pidData = doc.querySelector('PidData');
+  const dataType = pidData ? pidData.getAttribute('type') : null;
+
+  const dataEl = doc.querySelector('Data');
+  const dataContent = dataEl ? dataEl.textContent : '';
+  const dataTypeVal = dataEl ? dataEl.getAttribute('type') : '';
+
+  const hmacEl = doc.querySelector('Hmac');
+  const hmacVal = hmacEl ? hmacEl.textContent : '';
+
+  const skeyEl = doc.querySelector('Skey');
+  const skeyCi = skeyEl ? skeyEl.getAttribute('ci') : '';
+  const skeyVal = skeyEl ? skeyEl.textContent : '';
+
+  const deviceInfo = doc.querySelector('DeviceInfo');
+  const srno = deviceInfo ? deviceInfo.getAttribute('srno') : '';
+  const dpId2 = deviceInfo ? deviceInfo.getAttribute('dpId') : '';
+  const rdsId2 = deviceInfo ? deviceInfo.getAttribute('rdsId') : '';
+  const rdsVer2 = deviceInfo ? deviceInfo.getAttribute('rdsVer') : '';
+  const dc2 = deviceInfo ? deviceInfo.getAttribute('dc') : '';
+  const mi2 = deviceInfo ? deviceInfo.getAttribute('mi') : '';
+  const mc2 = deviceInfo ? deviceInfo.getAttribute('mc') : '';
+
+  const ciEl = doc.querySelector('Ci');
+  const sessionKey = ciEl ? ciEl.textContent : '';
+
+  const bitmapData = '';
+
+  if (errCode && errCode !== '0') {
+    log(`Error Code ${errCode}: ${errInfo}`, 'error');
+  } else {
+    log(`Capture successful. Fingers: ${fCount}, Quality: ${qScore}, NFIQ: ${nmPoints}`, 'success');
+  }
+
+  document.getElementById('dataPanel').innerHTML = `
+    <div class="data-block"><h4>errCode</h4><pre>${errCode !== null ? errCode : 'N/A'} ${errCode==='0'? '✓ Success':''}</pre></div>
+    <div class="data-block"><h4>errInfo</h4><pre>${errInfo || 'N/A'}</pre></div>
+    <div class="data-block"><h4>fCount (Finger Count)</h4><pre>${fCount !== null ? fCount : 'N/A'}</pre></div>
+    <div class="data-block"><h4>iCount (Iris Count)</h4><pre>${iCount !== null ? iCount : 'N/A'}</pre></div>
+    <div class="data-block"><h4>pCount (Face Count)</h4><pre>${pCount !== null ? pCount : 'N/A'}</pre></div>
+    <div class="data-block"><h4>nmPoints (Minutiae Points)</h4><pre>${nmPoints !== null ? nmPoints : 'N/A'}</pre></div>
+    <div class="data-block"><h4>qScore (Quality Score)</h4><pre>${qScore !== null ? qScore : 'N/A'}</pre></div>
+    <div class="data-block"><h4>PidData Type</h4><pre>${dataType || 'N/A'}</pre></div>
+
+    <div class="data-block full-width"><h4>Encrypted PID Data (Data)</h4><pre style="max-height:180px;">${dataContent ? escapeHtml(dataContent.substring(0, 800)) + (dataContent.length>800?'...':'') : 'N/A'}</pre></div>
+    <div class="data-block full-width"><h4>Hmac</h4><pre style="max-height:120px;">${hmacVal ? escapeHtml(hmacVal.substring(0, 400)) + (hmacVal.length>400?'...':'') : 'N/A'}</pre></div>
+    <div class="data-block full-width"><h4>Skey (Session Key)</h4><pre style="max-height:120px;">${skeyVal ? escapeHtml(skeyVal.substring(0, 400)) + (skeyVal.length>400?'...':'') : 'N/A'}</pre></div>
+    <div class="data-block"><h4>Skey CI</h4><pre>${skeyCi || 'N/A'}</pre></div>
+    <div class="data-block"><h4>Session Key (Ci)</h4><pre>${sessionKey || 'N/A'}</pre></div>
+
+    <div class="data-block"><h4>Device SrNo</h4><pre>${srno || 'N/A'}</pre></div>
+    <div class="data-block"><h4>Device dpId</h4><pre>${dpId2 || 'N/A'}</pre></div>
+    <div class="data-block"><h4>Device rdsId</h4><pre>${rdsId2 || 'N/A'}</pre></div>
+    <div class="data-block"><h4>Device rdsVer</h4><pre>${rdsVer2 || 'N/A'}</pre></div>
+    <div class="data-block"><h4>Device dc</h4><pre>${dc2 || 'N/A'}</pre></div>
+    <div class="data-block"><h4>Device mi</h4><pre>${mi2 || 'N/A'}</pre></div>
+    <div class="data-block full-width"><h4>Device mc (Public Key)</h4><pre style="max-height:140px;">${mc2 ? escapeHtml(mc2.substring(0, 500)) + (mc2.length>500?'...':'') : 'N/A'}</pre></div>
+
+    <div class="data-block full-width"><h4>Raw Capture XML Response</h4><pre style="max-height:300px;">${escapeHtml(xmlText)}</pre></div>
+  `;
+}
+
+log('Page ready. "Discover RD Service" se shuru karein.', 'success');
+</script>
+</body>
+</html>
